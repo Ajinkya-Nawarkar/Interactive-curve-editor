@@ -48,6 +48,9 @@ const sizer = document.getElementById("size");
 // Some variables
 const color = [0, 0, 0, 255];
 const customcolor = [0, 0, 255, 255];
+var EL_type = "";
+var EL_new_point = [];
+var EL_step_size = 1;
 
 let drawPointsGPU = undefined;
 let drawLineGPU = undefined;
@@ -88,6 +91,24 @@ function load()
         fragmentSource = txt;
         init();
     });
+
+    function setMousePos(event){
+        EL_new_point = [event.pageX, event.pageY];
+        console.log(new_point);
+    }
+    function setType(event){
+        EL_type = "chaikin";
+        console.log(type);
+    }
+    function setStepSize(event){
+        EL_step_size = document.getElementById('step').value;
+        console.log(step_size);
+    }
+
+    document.addEventListener('click', setMousePos, true);
+    document.getElementById('chaikin').addEventListener('click', setType, true);
+    document.getElementById('step').addEventListener('click', setStepSize, true);
+
 }
 
 // The intialization function. Checks for all resources before continuing

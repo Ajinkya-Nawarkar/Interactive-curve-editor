@@ -253,6 +253,8 @@ function drawLine(x0, y0, x1, y1)
     // Round to determine pixel location
     const pixel = (x, y) => [Math.round(x), Math.round(y)];
 
+    const line_color = [0, 0, 0, 255];
+
     // Differences and step value
     let [dx, dy] = [x1 - x0, y1 - y0];
     let step = 0;
@@ -267,17 +269,23 @@ function drawLine(x0, y0, x1, y1)
     // Generate
     let [x, y] = [x0, y0];
     const pixels = [pixel(x, y)];
-    const colors = [color] 
+    const colors = [line_color] 
     for(let i = 0; i < step; ++i)
     {
         x += dx; y += dy;
         pixels.push(pixel(x,y));
-        colors.push(color);
+        colors.push(line_color);
     }  
 
     drawPointsGPU(pixels, colors);
 }
 
+
+function drawCurveLines(new_points)
+{
+    for (let i = 0; i < new_points.length-3; i+=2)
+        drawLine(new_points[i], new_points[i+1], new_points[i+2], new_points[i+3]);
+}
 
 // Referenced from Dr. T.J.'s "Chaikin's Curves" notes on Observable
 // https://observablehq.com/@infowantstobeseen/chaikins-curves?collection=@infowantstobeseen/computer-graphics
@@ -348,6 +356,7 @@ function drawCurve(type, points, step_size, closed)
     }
 
     drawPointsGPU(new_points, new_colors);
+    drawCurveLines(new_points);
 }
 
 

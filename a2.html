@@ -84,12 +84,12 @@
 </head>
 
   <body>
+      <input id="chaikin" type="checkbox" name="chaikin" value="Chaikin" checked disabled> Chaikin  <br>
+      <input id="step" type="range" name="step" min="1" max="15" value="1"> 1- 15 
     <div class="container">
       <canvas id="canvas"></canvas>
       <button title="Help" type="button" id="help-button" name="help-button" onclick="toggle_help();">?</button>      
-      <input title="Command" autofocus type="text" placeholder="line 0 0 500 500" id="commands" onchange="parse(this.value)"></input>
-      <div title="Current Color" id="color"></div>
-      <span title="Canvas Size" id="size">(xxxx, xxxx)</span>
+      <span title="Canvas Size" id="size"></span>
     </div>
 
     <div style="display: none" id="help">

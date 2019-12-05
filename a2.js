@@ -43,8 +43,6 @@
 // HTML element we need
 const canvas = document.getElementById("canvas");
 const help = document.getElementById("help");
-const input = document.getElementById("commands");
-const color_div = document.getElementById("color");
 const sizer = document.getElementById("size");
 
 // Some variables
@@ -53,7 +51,8 @@ const customcolor = [0, 0, 255, 255];
 
 let drawPointsGPU = undefined;
 let drawLineGPU = undefined;
-let drawTriangleGPU = undefined;
+
+let points = [];
 
 // Load regl module into the canvs element on the page
 // For this assignment, we turn off antialiasing (so we do it manually) and
@@ -228,21 +227,6 @@ function init()
         // Draw the GPU-based code
         reglBox({mode:1, color:color, vertices:vertices});
     };
-    drawTriangleGPU = (vertices, color) => 
-    {
-        // Update the canvas size. Correct for DPI
-        width = canvas.clientWidth * window.devicePixelRatio;
-        height = canvas.clientHeight * window.devicePixelRatio;
-        if(canvas.width !== width || canvas.height !== height)
-        {
-            canvas.width = width;
-            canvas.height = height;
-            regl.poll();
-        }
-    
-        // Draw the GPU-based code
-        reglBox({mode:2, color:color, vertices:vertices});
-    };
 }
 
 // Call load when loaded
@@ -262,52 +246,14 @@ function toggle_help()
     help.style.display = (help.style.display == "none"? "block" : "none");
 }
 
-// Handle command parsing. Deal with HiDPI as well
-function parse(value)
-{
-    const tokens = value.split(" ");
-    if(tokens.length < 1)
-        return;
-
-    switch(tokens[0])
-    {
-        case "line":
-            drawLine(...tokens.slice(1).map(x => window.devicePixelRatio * parseInt(x)));
-            break;
-        case "poly":
-            drawPolygon(tokens.slice(1).map(x => window.devicePixelRatio * parseInt(x)));
-            break;
-        case "clear":
-            regl.clear({color:[1,1,1,1], depth: 1});
-            break;
-        case "color":
-            color[0] = parseInt(tokens[1]);
-            color[1] = parseInt(tokens[2]);
-            color[2] = parseInt(tokens[3]);
-            color_div.style.backgroundColor = "rgb(" + color[0] + "," + color[1] + "," + color[2] + ")";
-            break;
-        case "circle":
-            drawCircle(...tokens.slice(1).map(x => window.devicePixelRatio * parseInt(x)));
-            break;
-        case "curve":
-            drawCurve(tokens[1], tokens.slice(2).map(x => window.devicePixelRatio * parseInt(x)), false);
-            break;
-        case "closed":
-            drawCurve(tokens[1], tokens.slice(2).map(x => window.devicePixelRatio * parseInt(x)), true);
-            break;
-        default:
-            input.value = "<Invalid Input>";
-            return;
-    }
-    input.value = "";
-}
-
 // Extracted from Dr. T.J.'s "Drawing Lines" notes on Observable
 // https://observablehq.com/@infowantstobeseen/drawing-lines?collection=@infowantstobeseen/computer-graphics
 function drawLine(x0, y0, x1, y1)
 {
     // Round to determine pixel location
     const pixel = (x, y) => [Math.round(x), Math.round(y)];
+
+    const line_color = [0, 0, 0, 255];
 
     // Differences and step value
     let [dx, dy] = [x1 - x0, y1 - y0];
@@ -323,213 +269,27 @@ function drawLine(x0, y0, x1, y1)
     // Generate
     let [x, y] = [x0, y0];
     const pixels = [pixel(x, y)];
-    const colors = [color] 
+    const colors = [line_color] 
     for(let i = 0; i < step; ++i)
     {
         x += dx; y += dy;
         pixels.push(pixel(x,y));
-        colors.push(color);
+        colors.push(line_color);
     }  
 
     drawPointsGPU(pixels, colors);
 }
 
-function isConvex(v1, v2, v3)
+
+function drawCurveLines(new_points)
 {
-    let cross_magnitude = (v1, v2) => { return (v1[0]*v2[1]) - (v1[1]*v2[0]) };
-    let sub = (v1, v2) => { return ([v1[0]-v2[0], v1[1]-v2[1]]) };
-
-    return (cross_magnitude(sub(v3, v2), sub(v1, v2)) > 0)? true: false;
-}
-
-function in_triangle(pt, vert_a, vert_b, vert_c)
-{
-    let sub = (v1, v2) => { return [v1[0]-v2[0], v1[1]-v2[1]] };
-    let dot = (v1, v2) => { return (v1[0]*v2[0] + v1[1]*v2[1]) };
-
-    // Extracted from Dr. T.J.'s "Barycentric coordinates" notes on Observable
-    // https://observablehq.com/@infowantstobeseen/barycentric-coordinates?collection=@infowantstobeseen/computer-graphics
-    calc_barycentric = (pt, vert_a, vert_b, vert_c) => 
-    {
-        const ab = sub(vert_b, vert_a);
-        const ac = sub(vert_c, vert_a);
-        const ap = sub(pt, vert_a);
-
-        const nac = [vert_a[1] - vert_c[1], vert_c[0] - vert_a[0]];
-        const nab = [vert_a[1] - vert_b[1], vert_b[0] - vert_a[0]];
-
-        const bary_beta  = dot(ap, nac) / dot(ab, nac);
-        const bary_gamma = dot(ap, nab) / dot(ac, nab);
-        const bary_alpha = 1.000 - bary_beta - bary_gamma;
-
-        return [bary_alpha, bary_beta, bary_gamma];
-    };
-
-    let [alpha, beta, gamma] = calc_barycentric(pt, vert_a, vert_b, vert_c);
-
-    zed = 0;
-    // zed is our error tolerance. Occasionally, points will be negative but pretty 
-    // much zero and thus we are in the triangle. zed corrects for this. Higher 
-    // precision floats or tiny tiny pixels avoid or ignore this
-    if(alpha >= zed && beta >= zed && gamma >= zed )
-        return true;
-    else
-        return false;
-}
-
-function fill_triangle(vert_a, vert_b, vert_c)
-{
-    // Round to determine pixel location
-    const pixel = (x, y) => [Math.round(x), Math.round(y)];
-
-    get_min = (vertices) => 
-    {
-        x = Number.MAX_VALUE;
-        y = Number.MAX_VALUE;
-        for (let i = 0; i < vertices.length; ++i)
-        {
-            if (vertices[i][0] < x)
-                x = vertices[i][0];
-            if (vertices[i][1] < y)
-                y = vertices[i][1];
-        }
-        return [x, y];
-    };
-
-    get_max = (vertices) => 
-    {
-        x = Number.MIN_VALUE;
-        y = Number.MIN_VALUE;
-        for (let i = 0; i < vertices.length; ++i)
-        {
-            if (vertices[i][0] > x)
-                x = vertices[i][0];
-            if (vertices[i][1] > y)
-                y = vertices[i][1];
-        }
-        return [x, y];
-    };
-
-    colors = [];
-    const pts = [];
-    
-    let [x_min, y_min] = get_min([vert_a, vert_b, vert_c]);
-    let [x_max, y_max] = get_max([vert_a, vert_b, vert_c]);
-    let i_min = Math.floor(x_min);
-    let i_max = Math.ceil(x_max);
-    let j_min = Math.floor(y_min);
-    let j_max = Math.ceil(y_max);
-
-    for(let i = i_min; i <= i_max; ++i)
-    {
-        for(let j = j_min; j <= j_max; ++j)
-        {
-            if(in_triangle([i,j], vert_a, vert_b, vert_c)) 
-            {
-                pts.push(pixel(i, j));
-                colors.push(color);
-            }
-        }
-    }
-  return [pts, colors];
-}
-
-// Referenced from Dr. T.J.'s "Drawing (Simple) Polygons" notes on Observable
-// https://observablehq.com/@infowantstobeseen/drawing-simple-polygons?collection=@infowantstobeseen/computer-graphics
-function drawPolygon(points)
-{
-    paired_pixels = [];
-    polygon_points = [];
-    polygon_colors = [];
-
-    for (let i = 0; i < points.length-1; i+=2)
-        paired_pixels.push([points[i], points[i+1]]);
-
-    // Check convexity of the polygon
-    let convexity = true;
-    for (let i = 0; i < paired_pixels.length; ++i)
-    {
-        if (i == 0)
-            convexity = isConvex(paired_pixels[paired_pixels.length - 1], paired_pixels[i], paired_pixels[i+1]);
-        else if (i == paired_pixels.length - 1)
-            convexity = isConvex(paired_pixels[i-1], paired_pixels[i], paired_pixels[0]);
-        else
-            convexity = isConvex(paired_pixels[i-1], paired_pixels[i], paired_pixels[i+1]);
-
-        if (!convexity)
-            break;
-    }
-
-    // split into triangles
-    triangles = [];
-    if (convexity)
-    {
-        for (let i = 1; i < paired_pixels.length - 1; ++i)
-        {
-            triangles.push([paired_pixels[0], paired_pixels[i], paired_pixels[i+1]]);
-        }
-    }
-
-    for (let i = 0; i < triangles.length; ++i)
-    {
-        let [triangle_points, triangle_colors] = fill_triangle(triangles[i][0], triangles[i][1], triangles[i][2]);
-        polygon_points = polygon_points.concat(triangle_points);
-        polygon_colors = polygon_colors.concat(triangle_colors);
-    }
-
-    drawPointsGPU(polygon_points, polygon_colors);
-}
-
-// Extracted from Dr. T.J.'s "Drawing Circles" notes on Observable
-// https://observablehq.com/@infowantstobeseen/drawing-circles?collection=@infowantstobeseen/computer-graphics
-function drawCircle(x0, y0, r)
-{
-    const pixel = (x,y) => [x,y].map(Math.round);
-
-    // Initial condition
-    let [ic, jc] = pixel(x0, y0);
-    r = Math.round(r);
-    let [i,j] = [0, r];
-
-    // Find the error
-    let d = 1 - r;
-
-    // Rasterize by octant; start w/ four cardinal points
-    const pixels = [pixel(ic, jc + r),
-                  pixel(ic, jc - r),
-                  pixel(ic + r, jc),
-                  pixel(ic - r, jc)];
-    while(i < j)
-    {
-    // Update midpoint/error term
-    if(d >= 0)
-    {
-        j -= 1;
-        d -= 2 * j;
-    }
-    i += 1;
-    d += 2 * i + 1;
-
-    pixels.splice(pixels.length, 0, ...[pixel(ic + i, jc + j),
-                                       pixel(ic + i, jc - j),
-                                       pixel(ic - i, jc + j),
-                                       pixel(ic - i, jc - j),
-                                       pixel(ic + j, jc + i),
-                                       pixel(ic + j, jc - i),
-                                       pixel(ic - j, jc + i),
-                                       pixel(ic - j, jc - i)]);
-    }
-
-    colors = [];
-    for(let i = 0; i < pixels.length; ++i)
-        colors.push(color);
-
-    drawPointsGPU(pixels, colors);
+    for (let i = 0; i < new_points.length-3; i+=2)
+        drawLine(new_points[i], new_points[i+1], new_points[i+2], new_points[i+3]);
 }
 
 // Referenced from Dr. T.J.'s "Chaikin's Curves" notes on Observable
 // https://observablehq.com/@infowantstobeseen/chaikins-curves?collection=@infowantstobeseen/computer-graphics
-function drawCurve(type, points, closed)
+function drawCurve(type, points, step_size, closed)
 {
     paired_pixels = [];
     for (let i = 0; i < points.length-1; i+=2)
@@ -548,8 +308,8 @@ function drawCurve(type, points, closed)
 
     if (type == "chaikin")
     {
-        let step = 15;
-        while(step > 0)
+        let step_size = 15;
+        while(step_size > 0)
         {
             new_points = [];
             new_colors = [];
@@ -591,9 +351,28 @@ function drawCurve(type, points, closed)
             }
 
             paired_pixels = new_points;
-            step--;
+            step_size--;
         }
     }
 
     drawPointsGPU(new_points, new_colors);
+    drawCurveLines(new_points);
 }
+
+
+function click_interaction(type, new_point, step_size)
+{
+    if (new_point.length > 1)
+    {
+        if (!points_is_contains(new_point))
+        {
+            points.push(new_point);
+        }
+    }
+
+    if (points.length > 2)
+    {
+        drawCurve(type, points, step_size, closed)
+    }    
+}
+

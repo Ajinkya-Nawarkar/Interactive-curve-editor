@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Computer Graphics Assignment 2: Rasterization</title>
+    <meta charset="utf-8">
+    <!-- Makes sure that browser doesn't cache; otherwise annoying -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <style>
+      body
+      {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+      }
+      .container
+      {
+        width: 100%;
+        height: 100vh;
+        display: grid;
+        grid-template-columns: 2em 1fr 2em 6em;
+        grid-template-rows: 1fr 2em;
+      }
+
+      #canvas
+      {
+        grid-column-start: span 4;
+        grid-row-start: 1;
+        width: 100%;
+        height: 100%;
+      }
+
+      #commands
+      {
+        grid-column-start: 2;
+        grid-column-end: span 1;
+        grid-row-start: 2;
+      }
+
+      #color
+      {
+        grid-column-start: 3;
+        grid-column-end: span 1;
+        grid-row-start: 2;
+        background: black;
+      }
+
+      #size
+      {
+        grid-column-start: 4;
+        grid-column-end: span 1;
+        grid-row-start: 2;
+        text-align: center;
+        align-self: center;
+      }
+
+      #help-button
+      {
+        text-align: center;
+        font-weight: bold;
+        margin-top: auto; margin-bottom: auto;
+        grid-column-start: 1;
+        grid-column-end: span 1;
+        grid-row-start: 2;
+        height: 100%;
+     }
+
+     #help
+     {
+       display: none;
+       width: 80%;
+       height: 80vh;
+       z-index: 1;
+       position: absolute;
+       top: 10vh;
+       left: 10%;
+       border: thin solid black;
+       padding: 1em;
+       background-color: lightsteelblue;
+       overflow: scroll;
+     }
+    </style>
+</head>
+
+  <body>
+    <div class="container">
+      <canvas id="canvas"></canvas>
+      <button title="Help" type="button" id="help-button" name="help-button" onclick="toggle_help();">?</button>      
+      <input title="Command" autofocus type="text" placeholder="line 0 0 500 500" id="commands" onchange="parse(this.value)"></input>
+      <div title="Current Color" id="color"></div>
+      <span title="Canvas Size" id="size">(xxxx, xxxx)</span>
+    </div>
+
+    <div style="display: none" id="help">
+      <h1>Rasterization Demo</h1>
+      <h2>Help</h2>
+      <p>Commands:</p>
+      <ul>
+        <li><b>line x0 y0 x1 y1</b> Create a line between the two integer points</li>
+        <li><b>poly x0 y0 ... xn-1 yn-1</b> Create a polygon at the given integer points</li>
+        <li><b>color r g b</b> Set the current drawing color; values between 0..255</li>
+        <li><b>clear</b> Reset the canvas</li>
+      </ul>
+
+      <p>Optional Commands:</p>
+      <ul>
+        <li><b>circle x0 y0 r</b> Create a circle centered at the integer point with the given radius</li>
+        <li><b>curve type x0 y0 ... xn-1 yn-1</b> Create an open curve of type ("bezier" or "chaikin") with the given control polygon</li>
+        <li><b>closed type x0 y0 ... xn-1 yn-1</b> Create a closed curve of type ("bezier" or "chaikin") with the given control polygon</li>
+      </ul>
+    </div>
+    
+    <script src="https://npmcdn.com/regl/dist/regl.js"></script>
+    <script src="a2.js"></script>
+  </body>
+</html>
+

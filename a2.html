@@ -17,18 +17,13 @@
       .container
       {
         width: 100%;
-        height: 100vh;
-        display: grid;
-        grid-template-columns: 2em 1fr 2em 6em;
-        grid-template-rows: 1fr 2em;
+        height: 87vh;
       }
 
       #canvas
       {
-        grid-column-start: span 4;
-        grid-row-start: 1;
         width: 100%;
-        height: 100%;
+        height: 87vh;
       }
 
       #commands
@@ -60,10 +55,7 @@
         text-align: center;
         font-weight: bold;
         margin-top: auto; margin-bottom: auto;
-        grid-column-start: 1;
-        grid-column-end: span 1;
-        grid-row-start: 2;
-        height: 100%;
+        height: 5%;
      }
 
      #help
@@ -83,9 +75,10 @@
     </style>
 </head>
 
+  <header> Chaikin <input id="chaikin" type="checkbox" name="chaikin" value="Chaikin" checked disabled> <br>
+    View Rough Lines <input id="showLines" type="checkbox" value="true" checked> <br>
+    Step Size: 1- 15 <input id="step" type="range" name="step" min="1" max="15" value="9">  </header>
   <body>
-      Chaikin <input id="chaikin" type="checkbox" name="chaikin" value="Chaikin" checked disabled> <br>
-      Step Size: 1- 15 <input id="step" type="range" name="step" min="1" max="15" value="9"> 
     <div class="container">
       <canvas id="canvas"></canvas>
       <button title="Help" type="button" id="help-button" name="help-button" onclick="toggle_help();">?</button>      

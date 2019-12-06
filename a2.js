@@ -47,6 +47,7 @@ const sizer = document.getElementById("size");
 
 // Some variables
 const color = [0, 0, 0, 255];
+const color2 = [255, 0, 0, 255];
 const customcolor = [0, 0, 255, 255];
 var EL_type = "chaikin";
 var EL_new_point = [];
@@ -465,10 +466,6 @@ function points_is_contains(new_point)
 
 function click_interaction(type, new_point, step_size)
 {
-    console.log("type: " + type);
-    console.log("point: " + new_point);
-    console.log("step: " + step_size);
-
     if (new_point.length > 1)
     {
         if (!points_is_contains(new_point))
@@ -476,20 +473,78 @@ function click_interaction(type, new_point, step_size)
             console.log("adding new point");
             points.push(new_point[0]);
             points.push(new_point[1]);
-            console.log(points);
+            console.log("points: " + points);
+            console.log("points length: " + points.length);
         }
     }
 
+    if (points.length == 4) {
+        drawLine(points[0], points[1], points[2], points[3]);
+    }
     if (points.length > 2)
     {
-        console.log("before drawcurve");
-        regl.clear({color:[1,1,1,1], depth: 1});
         drawCurve(type, points, step_size, false)
-    }
-    // else
-    // {
-    //     drawPointsGPU(points, color);
-    //     // drawCurveLines(points);
-    // }    
+        var lines = points.slice(points.length - 4, points.length);
+        drawLine(lines[0], lines[1], lines[2], lines[3]);
+    } 
 }
 
+function midpoint([x0, y0], [x1, y1]) 
+{
+    // Round to determine pixel location
+    const pixel = (x,y) => [Math.round(x), Math.round(y)]
+    let [i0, j0] = pixel(x0,y0);
+    let [i1, j1] = pixel(x1,y1);
+    let [i,j] = [i0,j0];
+
+    // Steps
+    let stepi = i1 > i0 ? 1 : i1 < i0? -1 : 0;
+    let stepj = j1 > j0 ? 1 : j1 < j0? -1 : 0;
+
+    // Determine error 
+    let di = Math.abs(i1 - i0);
+    let dj = Math.abs(j1 - j0);
+    
+    // Find line orientation
+    let steep = false;
+    if(dj > di)
+    {
+        steep = true;
+        [i,j] = [j,i];
+        [di,dj] = [dj,di];
+        [stepi,stepj] = [stepj,stepi];
+    }
+    let d = di - (2 * dj);
+
+    // Rasterize
+    const pixels = [];
+    const push_pixel = (i,j,steep) => steep? pixels.push([j,i]) : pixels.push([i,j]);
+    push_pixel(i,j,steep);
+    for(let count = 1; count <= di; ++count)
+    {
+        // Update midpoint/error term
+        if(d <= 0)
+        {
+        j += stepj;
+        d += 2 * di;
+        }
+        i += stepi;
+        d -= 2 * dj;
+        push_pixel(i,j,steep);
+    }
+    
+    return pixels;
+}
+
+function drawLine(x0, y0, x1, y1)
+{
+    point1 = [x0, y0];
+    point2 = [x1, y1];
+    lineColors = [];
+    linePoints = midpoint(point1, point2);
+    for(i = 0; i < linePoints.length + 1; i++) {
+        lineColors.push([color2, 255]);
+    }
+
+    drawPointsGPU(linePoints, lineColors);
+}

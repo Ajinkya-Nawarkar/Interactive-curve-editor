@@ -57,6 +57,7 @@ let drawPointsGPU = undefined;
 let drawLineGPU = undefined;
 
 let points = [];
+let circle_tolerance = 5;
 
 // Load regl module into the canvs element on the page
 // For this assignment, we turn off antialiasing (so we do it manually) and
@@ -443,7 +444,7 @@ function points_is_contains(new_point)
     {
         let ic = paired_pixels[i][0];
         let jc = paired_pixels[i][1];
-        if (new_point[0] >= ic-5 && new_point[0] <= ic+5 && new_point[1] >= jc-5 && new_point[1] <= jc+5)
+        if (new_point[0] >= ic-circle_tolerance && new_point[0] <= ic+circle_tolerance && new_point[1] >= jc-circle_tolerance && new_point[1] <= jc+circle_tolerance)
             // if (paired_pixels[i][0] == new_point[0] && paired_pixels[i][1] == new_point[1])
         {
             console.log("removing point");
@@ -491,7 +492,7 @@ function click_interaction(type, new_point, step_size)
         for (let i = 0; i < points.length; i+=2)
             drawLine(points[i], points[i+1], points[i+2], points[i+3]);
 
-        for (let i = 0; i < points.length; i++)
-            drawCircle(points[i], points[i+1], 5);
+        for (let i = 0; i < points.length; i+=2)
+            drawCircle(points[i], points[i+1], circle_tolerance);
     } 
 }

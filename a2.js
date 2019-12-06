@@ -429,8 +429,10 @@ function drawCurve(type, points, step_size, closed)
     drawPointsGPU(new_points, new_colors);
 }
 
+
 function points_is_contains(new_point)
 {
+    let contains = false;
     paired_pixels = [];
     const pixel = ([x,y]) => [x,y].map(Math.round);
 
@@ -439,23 +441,26 @@ function points_is_contains(new_point)
 
     for (let i = 0; i < paired_pixels.length; i++)
     {
-        if (paired_pixels[i] == new_point)
+        if (paired_pixels[i][0] == new_point[0] && paired_pixels[i][1] == new_point[1])
         {
+            console.log("removing point");
             paired_pixels.splice(i, 1);
             points = [];
+            contains = true;
+            break;
         }
-        else
-        {
-            return false; 
-        }
+    }
 
+    if (contains)
+    {
         for (let i = 0; i < paired_pixels.length; i++)
         {
-            points.push(pixel(paired_pixels[i]));
+            points.push(pixel(paired_pixels[i])[0]);
+            points.push(pixel(paired_pixels[i])[1]);
         }
-
-        return true;
     }
+
+    return contains;
 }
 
 function click_interaction(type, new_point, step_size)
@@ -467,8 +472,8 @@ function click_interaction(type, new_point, step_size)
             console.log("adding new point");
             points.push(new_point[0]);
             points.push(new_point[1]);
-            console.log("points: " + points);
-            console.log("points length: " + points.length);
+            console.log("points: ");
+            console.log(points);
         }
     }
 

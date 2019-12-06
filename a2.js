@@ -94,7 +94,7 @@ function load()
     });
 
     function setMousePos(event){
-        EL_new_point = [window.devicePixelRatio * event.pageX, window.devicePixelRatio * (canvas.clientHeight - event.pageY)];
+        EL_new_point = [window.devicePixelRatio * event.pageX, window.devicePixelRatio * ((canvas.clientHeight + 67) - event.pageY)];
         click_interaction(EL_type, EL_new_point, EL_step_size);
         console.log(EL_new_point);
         EL_new_point = [];
@@ -103,7 +103,7 @@ function load()
     function setType(event){
         EL_type = "chaikin";
         EL_new_point = [];
-        click_interaction(EL_type, EL_new_point, EL_step_size);
+        //click_interaction(EL_type, EL_new_point, EL_step_size);
         console.log(EL_type);
     }
     function setStepSize(event){
@@ -113,7 +113,7 @@ function load()
         console.log(EL_step_size);
     }
 
-    document.addEventListener('click', setMousePos, true);
+    document.getElementById("canvas").addEventListener('click', setMousePos, true);
     document.getElementById('chaikin').addEventListener('click', setType, true);
     document.getElementById('step').addEventListener('click', setStepSize, true);
 

@@ -94,7 +94,7 @@ function load()
     });
 
     function setMousePos(event){
-        EL_new_point = [window.devicePixelRatio * event.pageX, window.devicePixelRatio * (canvas.clientHeight - event.pageY)];
+        EL_new_point = [window.devicePixelRatio * event.pageX, window.devicePixelRatio * (canvas.clientHeight + 67 - event.pageY)];
         click_interaction(EL_type, EL_new_point, EL_step_size);
         console.log(EL_new_point);
         EL_new_point = [];
@@ -460,6 +460,7 @@ function points_is_contains(new_point)
         }
     }
 
+    regl.clear({color:[1,1,1,1], depth: 1});
     return contains;
 }
 
@@ -480,9 +481,10 @@ function click_interaction(type, new_point, step_size)
     if (points.length == 4) {
         drawLine(points[0], points[1], points[2], points[3]);
     }
+
     if (points.length > 2)
     {
-        drawCurve(type, points, step_size, false)
+        drawCurve(type, points, step_size, false);
         var lines = points.slice(points.length - 4, points.length);
         drawLine(lines[0], lines[1], lines[2], lines[3]);
     } 

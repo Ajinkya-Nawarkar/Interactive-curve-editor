@@ -94,16 +94,16 @@ function load()
     });
 
     function setMousePos(event){
+        //hello
         EL_new_point = [window.devicePixelRatio * event.pageX, window.devicePixelRatio * ((canvas.clientHeight + 67) - event.pageY)];
         click_interaction(EL_type, EL_new_point, EL_step_size);
         console.log(EL_new_point);
         EL_new_point = [];
-       
     }
     function setType(event){
         EL_type = "chaikin";
         EL_new_point = [];
-        //click_interaction(EL_type, EL_new_point, EL_step_size);
+        click_interaction(EL_type, EL_new_point, EL_step_size);
         console.log(EL_type);
     }
     function setStepSize(event){

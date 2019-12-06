@@ -50,7 +50,7 @@ const color = [0, 0, 0, 255];
 const customcolor = [0, 0, 255, 255];
 var EL_type = "chaikin";
 var EL_new_point = [];
-var EL_step_size = 1;
+var EL_step_size = 9;
 
 let drawPointsGPU = undefined;
 let drawLineGPU = undefined;
@@ -93,7 +93,7 @@ function load()
     });
 
     function setMousePos(event){
-        EL_new_point = [event.pageX, (canvas.clientHeight - event.pageY)];
+        EL_new_point = [window.devicePixelRatio * event.pageX, window.devicePixelRatio * (canvas.clientHeight - event.pageY)];
         click_interaction(EL_type, EL_new_point, EL_step_size);
         console.log(EL_new_point);
         EL_new_point = [];
@@ -466,8 +466,8 @@ function points_is_contains(new_point)
 function click_interaction(type, new_point, step_size)
 {
     console.log("type: " + type);
-        console.log("point: " + new_point);
-        console.log("step: " + step_size);
+    console.log("point: " + new_point);
+    console.log("step: " + step_size);
 
     if (new_point.length > 1)
     {

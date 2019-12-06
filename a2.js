@@ -283,7 +283,7 @@ function drawLine(x0, y0, x1, y1)
     // Round to determine pixel location
     const pixel = (x, y) => [Math.round(x), Math.round(y)];
 
-    const line_color = [0, 0, 0, 255];
+    const line_color = [color2, 255];
 
     // Differences and step value
     let [dx, dy] = [x1 - x0, y1 - y0];
@@ -357,11 +357,6 @@ function drawCircle(x0, y0, r)
     drawPointsGPU(pixels, colors);
 }
 
-function drawCurveLines(new_points)
-{
-    for (let i = 0; i < new_points.length-3; i+=2)
-        drawLine(new_points[i], new_points[i+1], new_points[i+2], new_points[i+3]);
-}
 
 // Referenced from Dr. T.J.'s "Chaikin's Curves" notes on Observable
 // https://observablehq.com/@infowantstobeseen/chaikins-curves?collection=@infowantstobeseen/computer-graphics
@@ -432,7 +427,6 @@ function drawCurve(type, points, step_size, closed)
     }
 
     drawPointsGPU(new_points, new_colors);
-    // drawCurveLines(new_points);
 }
 
 function points_is_contains(new_point)
@@ -487,64 +481,4 @@ function click_interaction(type, new_point, step_size)
         var lines = points.slice(points.length - 4, points.length);
         drawLine(lines[0], lines[1], lines[2], lines[3]);
     } 
-}
-
-function midpoint([x0, y0], [x1, y1]) 
-{
-    // Round to determine pixel location
-    const pixel = (x,y) => [Math.round(x), Math.round(y)]
-    let [i0, j0] = pixel(x0,y0);
-    let [i1, j1] = pixel(x1,y1);
-    let [i,j] = [i0,j0];
-
-    // Steps
-    let stepi = i1 > i0 ? 1 : i1 < i0? -1 : 0;
-    let stepj = j1 > j0 ? 1 : j1 < j0? -1 : 0;
-
-    // Determine error 
-    let di = Math.abs(i1 - i0);
-    let dj = Math.abs(j1 - j0);
-    
-    // Find line orientation
-    let steep = false;
-    if(dj > di)
-    {
-        steep = true;
-        [i,j] = [j,i];
-        [di,dj] = [dj,di];
-        [stepi,stepj] = [stepj,stepi];
-    }
-    let d = di - (2 * dj);
-
-    // Rasterize
-    const pixels = [];
-    const push_pixel = (i,j,steep) => steep? pixels.push([j,i]) : pixels.push([i,j]);
-    push_pixel(i,j,steep);
-    for(let count = 1; count <= di; ++count)
-    {
-        // Update midpoint/error term
-        if(d <= 0)
-        {
-        j += stepj;
-        d += 2 * di;
-        }
-        i += stepi;
-        d -= 2 * dj;
-        push_pixel(i,j,steep);
-    }
-    
-    return pixels;
-}
-
-function drawLine(x0, y0, x1, y1)
-{
-    point1 = [x0, y0];
-    point2 = [x1, y1];
-    lineColors = [];
-    linePoints = midpoint(point1, point2);
-    for(i = 0; i < linePoints.length + 1; i++) {
-        lineColors.push([color2, 255]);
-    }
-
-    drawPointsGPU(linePoints, lineColors);
 }

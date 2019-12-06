@@ -441,7 +441,10 @@ function points_is_contains(new_point)
 
     for (let i = 0; i < paired_pixels.length; i++)
     {
-        if (paired_pixels[i][0] == new_point[0] && paired_pixels[i][1] == new_point[1])
+        let ic = paired_pixels[i][0];
+        let jc = paired_pixels[i][1];
+        if (new_point[0] >= ic-5 && new_point[0] <= ic+5 && new_point[1] >= jc-5 && new_point[1] <= jc+5)
+            // if (paired_pixels[i][0] == new_point[0] && paired_pixels[i][1] == new_point[1])
         {
             console.log("removing point");
             paired_pixels.splice(i, 1);
@@ -487,5 +490,8 @@ function click_interaction(type, new_point, step_size)
 
         for (let i = 0; i < points.length; i+=2)
             drawLine(points[i], points[i+1], points[i+2], points[i+3]);
+
+        for (let i = 0; i < points.length; i++)
+            drawCircle(points[i], points[i+1], 5);
     } 
 }

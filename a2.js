@@ -482,8 +482,10 @@ function click_interaction(type, new_point, step_size)
     }
     if (points.length > 2)
     {
+        regl.clear({color:[1,1,1,1], depth: 1});
         drawCurve(type, points, step_size, false)
-        var lines = points.slice(points.length - 4, points.length);
-        drawLine(lines[0], lines[1], lines[2], lines[3]);
+
+        for (let i = 0; i < points.length; i+=2)
+            drawLine(points[i], points[i+1], points[i+2], points[i+3]);
     } 
 }

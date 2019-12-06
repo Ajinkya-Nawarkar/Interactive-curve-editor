@@ -48,7 +48,7 @@ const sizer = document.getElementById("size");
 // Some variables
 const color = [0, 0, 0, 255];
 const customcolor = [0, 0, 255, 255];
-var EL_type = "";
+var EL_type = "chaikin";
 var EL_new_point = [];
 var EL_step_size = 1;
 
@@ -93,21 +93,29 @@ function load()
     });
 
     function setMousePos(event){
-        EL_new_point = [event.pageX, event.pageY];
-        console.log(new_point);
+        EL_new_point = [event.pageX, (canvas.clientHeight - event.pageY)];
+        click_interaction(EL_type, EL_new_point, EL_step_size);
+        console.log(EL_new_point);
+        EL_new_point = [];
+       
     }
     function setType(event){
         EL_type = "chaikin";
-        console.log(type);
+        EL_new_point = [];
+        click_interaction(EL_type, EL_new_point, EL_step_size);
+        console.log(EL_type);
     }
     function setStepSize(event){
         EL_step_size = document.getElementById('step').value;
-        console.log(step_size);
+        EL_new_point = [];
+        click_interaction(EL_type, EL_new_point, EL_step_size);
+        console.log(EL_step_size);
     }
 
     document.addEventListener('click', setMousePos, true);
     document.getElementById('chaikin').addEventListener('click', setType, true);
     document.getElementById('step').addEventListener('click', setStepSize, true);
+
 
 }
 
@@ -301,6 +309,52 @@ function drawLine(x0, y0, x1, y1)
     drawPointsGPU(pixels, colors);
 }
 
+// Extracted from Dr. T.J.'s "Drawing Circles" notes on Observable
+// https://observablehq.com/@infowantstobeseen/drawing-circles?collection=@infowantstobeseen/computer-graphics
+function drawCircle(x0, y0, r)
+{
+    const pixel = (x,y) => [x,y].map(Math.round);
+
+    // Initial condition
+    let [ic, jc] = pixel(x0, y0);
+    r = Math.round(r);
+    let [i,j] = [0, r];
+
+    // Find the error
+    let d = 1 - r;
+
+    // Rasterize by octant; start w/ four cardinal points
+    const pixels = [pixel(ic, jc + r),
+                  pixel(ic, jc - r),
+                  pixel(ic + r, jc),
+                  pixel(ic - r, jc)];
+    while(i < j)
+    {
+    // Update midpoint/error term
+    if(d >= 0)
+    {
+        j -= 1;
+        d -= 2 * j;
+    }
+    i += 1;
+    d += 2 * i + 1;
+
+    pixels.splice(pixels.length, 0, ...[pixel(ic + i, jc + j),
+                                       pixel(ic + i, jc - j),
+                                       pixel(ic - i, jc + j),
+                                       pixel(ic - i, jc - j),
+                                       pixel(ic + j, jc + i),
+                                       pixel(ic + j, jc - i),
+                                       pixel(ic - j, jc + i),
+                                       pixel(ic - j, jc - i)]);
+    }
+
+    colors = [];
+    for(let i = 0; i < pixels.length; ++i)
+        colors.push(color);
+
+    drawPointsGPU(pixels, colors);
+}
 
 function drawCurveLines(new_points)
 {
@@ -329,7 +383,7 @@ function drawCurve(type, points, step_size, closed)
 
     if (type == "chaikin")
     {
-        let step_size = 15;
+        console.log("working on chaikin");
         while(step_size > 0)
         {
             new_points = [];
@@ -377,23 +431,65 @@ function drawCurve(type, points, step_size, closed)
     }
 
     drawPointsGPU(new_points, new_colors);
-    drawCurveLines(new_points);
+    // drawCurveLines(new_points);
 }
 
+function points_is_contains(new_point)
+{
+    paired_pixels = [];
+    const pixel = ([x,y]) => [x,y].map(Math.round);
+
+    for (let i = 0; i < points.length-1; i+=2)
+        paired_pixels.push([points[i], points[i+1]]);
+
+    for (let i = 0; i < paired_pixels.length; i++)
+    {
+        if (paired_pixels[i] == new_point)
+        {
+            paired_pixels.splice(i, 1);
+            points = [];
+        }
+        else
+        {
+            return false; 
+        }
+
+        for (let i = 0; i < paired_pixels.length; i++)
+        {
+            points.push(pixel(paired_pixels[i]));
+        }
+
+        return true;
+    }
+}
 
 function click_interaction(type, new_point, step_size)
 {
+    console.log("type: " + type);
+        console.log("point: " + new_point);
+        console.log("step: " + step_size);
+
     if (new_point.length > 1)
     {
         if (!points_is_contains(new_point))
         {
-            points.push(new_point);
+            console.log("adding new point");
+            points.push(new_point[0]);
+            points.push(new_point[1]);
+            console.log(points);
         }
     }
 
     if (points.length > 2)
     {
-        drawCurve(type, points, step_size, closed)
-    }    
+        console.log("before drawcurve");
+        regl.clear({color:[1,1,1,1], depth: 1});
+        drawCurve(type, points, step_size, false)
+    }
+    // else
+    // {
+    //     drawPointsGPU(points, color);
+    //     // drawCurveLines(points);
+    // }    
 }
 

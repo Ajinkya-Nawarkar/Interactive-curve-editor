@@ -102,7 +102,7 @@ function load()
         EL_new_point = [];
     }
     function setType(event){
-        EL_type = "chaikin";
+        EL_type = "bezier";
 
         EL_new_point = [];
         click_interaction(EL_type, EL_new_point, EL_step_size);
@@ -376,32 +376,32 @@ function binomial(i, n)
 
 function bernstein(t, i, n)
 {
-    return binomial(i, n) * Math.pow(t, i) * (Math.pow((1 - t), (n - i)));
+    return binomial(i, n) * (Math.pow(t, i)) * (Math.pow((1 - t), (n - i)));
 }
 
 function bezier(t, points)
 {
     let n = points.length - 1;
-    let x = 0;
-    let y = 0;
+    let xc = 0;
+    let yc = 0;
 
     for (let i = 0; i < points.length; i++)
     {
         bern = bernstein(t, i, n);
-        x += points[i][0] * bern;
-        y += points[i][1] * bern;
+        xc += points[i][0] * bern;
+        yc += points[i][1] * bern;
     }
 
-    return [x, y];
+    return [xc, yc];
 }
 
-function bezier_curve_range(n, points)
+function bezier_point_range(steps, points)
 {
     let new_points = [];
 
-    for (let i = 0; i < n; i++)
+    for (let i = 0; i < steps; i++)
     {
-        let t = i/(n-1);
+        let t = i/(steps-1);
         new_points.push(bezier(t, points));
     }
 
@@ -413,7 +413,7 @@ function drawBezier(control_points, step_size)
 {
     console.log(step_size);
     // let steps = 100;
-    let new_points = bezier_curve_range(step_size, control_points);
+    let new_points = bezier_point_range(step_size, control_points);
 
     let points = [];
 
@@ -500,15 +500,12 @@ function drawCurve(type, points, step_size, closed)
         for (let i = 0; i < points.length-1; i+=2)
             paired_pixels.push([points[i], points[i+1]]);
 
-        if (paired_pixels.length == 4)
-        {
-            new_points = drawBezier(paired_pixels, step_size);
+        new_points = drawBezier(paired_pixels, step_size);
 
-            for (let i = 0; i < new_points.length; i++)
-                new_colors.push(color);
+        for (let i = 0; i < new_points.length; i++)
+            new_colors.push(color);
 
-            drawPointsGPU(new_points, new_colors);
-        }
+        drawPointsGPU(new_points, new_colors);
     }
 }
 

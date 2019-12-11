@@ -49,7 +49,7 @@ const sizer = document.getElementById("size");
 const color = [0, 0, 0, 255];
 const color2 = [255, 0, 0, 255];
 const customcolor = [0, 0, 255, 255];
-var EL_type = "chaikin";
+var EL_type = "bezier";
 var EL_new_point = [];
 var EL_step_size = 9;
 
@@ -103,6 +103,7 @@ function load()
     }
     function setType(event){
         EL_type = "chaikin";
+
         EL_new_point = [];
         click_interaction(EL_type, EL_new_point, EL_step_size);
         console.log(EL_type);
@@ -116,6 +117,7 @@ function load()
 
     document.getElementById("canvas").addEventListener('click', setMousePos, true);
     document.getElementById('chaikin').addEventListener('click', setType, true);
+    document.getElementById('bezier').addEventListener('click', setType, true);
     document.getElementById('step').addEventListener('click', setStepSize, true);
 
 
@@ -358,6 +360,71 @@ function drawCircle(x0, y0, r)
     drawPointsGPU(pixels, colors);
 }
 
+function factorial(num)
+{
+    if (num === 0)
+      { return 1; }
+    else
+      { return num * factorial( num - 1 ); }
+}
+
+function binomial(i, n)
+{
+    let res = factorial(n) / (factorial(i) * factorial(n-i));
+    return res;
+}
+
+function bernstein(t, i, n)
+{
+    return binomial(i, n) * Math.pow(t, i) * (Math.pow((1 - t), (n - i)));
+}
+
+function bezier(t, points)
+{
+    let n = points.length - 1;
+    let x = 0;
+    let y = 0;
+
+    for (let i = 0; i < points.length; i++)
+    {
+        bern = bernstein(t, i, n);
+        x += points[i][0] * bern;
+        y += points[i][1] * bern;
+    }
+
+    return [x, y];
+}
+
+function bezier_curve_range(n, points)
+{
+    let new_points = [];
+
+    for (let i = 0; i < n; i++)
+    {
+        let t = i/(n-1);
+        new_points.push(bezier(t, points));
+    }
+
+    return new_points;
+}
+
+
+function drawBezier(control_points, step_size)
+{
+    console.log(step_size);
+    // let steps = 100;
+    let new_points = bezier_curve_range(step_size, control_points);
+
+    let points = [];
+
+    for (let i = 0; i < new_points.length; i++)
+    {
+        points.push(new_points[i][0]);
+        points.push(new_points[i][1]);
+    }
+
+    return points;
+}
 
 // Referenced from Dr. T.J.'s "Chaikin's Curves" notes on Observable
 // https://observablehq.com/@infowantstobeseen/chaikins-curves?collection=@infowantstobeseen/computer-graphics
@@ -425,9 +492,24 @@ function drawCurve(type, points, step_size, closed)
             paired_pixels = new_points;
             step_size--;
         }
+        drawPointsGPU(new_points, new_colors);
     }
+    else if (type == "bezier")
+    {
+        paired_pixels = [];
+        for (let i = 0; i < points.length-1; i+=2)
+            paired_pixels.push([points[i], points[i+1]]);
 
-    drawPointsGPU(new_points, new_colors);
+        if (paired_pixels.length == 4)
+        {
+            new_points = drawBezier(paired_pixels, step_size);
+
+            for (let i = 0; i < new_points.length; i++)
+                new_colors.push(color);
+
+            drawPointsGPU(new_points, new_colors);
+        }
+    }
 }
 
 

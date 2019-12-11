@@ -75,13 +75,14 @@
     </style>
 </head>
 
-  <header> Chaikin <input id="chaikin" type="checkbox" name="chaikin" value="Chaikin" checked disabled> <br>
+  <header> Chaikin <input id="chaikin" type="checkbox" name="chaikin" value="true" checked> &emsp;
+    Bezier <input id="bezier" type="checkbox" name="bezier" value="false" unchecked> <br>
     View Rough Lines <input id="showLines" type="checkbox" value="true" checked> <br>
-    Step Size: 1- 15 <input id="step" type="range" name="step" min="1" max="15" value="9">  </header>
+    Step Size: 1- 15 <input id="step" type="range" name="step" min="1" max="1000" value="11">  </header>
   <body>
     <div class="container">
       <canvas id="canvas"></canvas>
-      <button title="Help" type="button" id="help-button" name="help-button" onclick="toggle_help();">?</button>      
+      <!-- <button title="Help" type="button" id="help-button" name="help-button" onclick="toggle_help();">?</button>       -->
       <span title="Canvas Size" id="size"></span>
     </div>
 

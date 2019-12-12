@@ -75,10 +75,12 @@
     </style>
 </head>
 
-  <header> Chaikin <input id="chaikin" type="checkbox" name="chaikin" value="true" checked> &emsp;
-    Bezier <input id="bezier" type="checkbox" name="bezier" value="false" unchecked> <br>
-    View Rough Lines <input id="showLines" type="checkbox" value="true" checked> <br>
-    Step Size: 1- 15 <input id="step" type="range" name="step" min="1" max="1000" value="11">  </header>
+  <header> 
+    Chaikin <input id="chaikin" type="radio" name="type" value="chaikin" checked> &emsp;
+    Bezier <input id="bezier" type="radio" name="type" value="bezier"> <br>
+    View Contruction Lines <input id="showLines" type="checkbox" value="true" checked> <br>
+    Step Size: 1- 15 <input id="step" type="range" name="step" min="1" max="20" value="11">  
+  </header>
   <body>
     <div class="container">
       <canvas id="canvas"></canvas>

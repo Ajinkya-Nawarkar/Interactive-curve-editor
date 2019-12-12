@@ -49,9 +49,10 @@ const sizer = document.getElementById("size");
 const color = [0, 0, 0, 255];
 const color2 = [255, 0, 0, 255];
 const customcolor = [0, 0, 255, 255];
-var EL_type = "bezier";
+var EL_type = "chaikin";
 var EL_new_point = [];
-var EL_step_size = 9;
+var EL_step_size = 11;
+var EL_show_lines = "true";
 
 let drawPointsGPU = undefined;
 let drawLineGPU = undefined;
@@ -102,24 +103,46 @@ function load()
         EL_new_point = [];
     }
     function setType(event){
-        EL_type = "bezier";
-
+        EL_step_size = parseInt(document.getElementById('step').value);
+        if( EL_type === "bezier"){
+            EL_type = "chaikin";
+            console.log("Step size: " + EL_step_size);
+        }
+        else {
+            EL_type = "bezier";
+            EL_step_size = EL_step_size + 300;
+            console.log("Step size: " + EL_step_size);
+        }
         EL_new_point = [];
         click_interaction(EL_type, EL_new_point, EL_step_size);
         console.log(EL_type);
     }
     function setStepSize(event){
-        EL_step_size = document.getElementById('step').value;
+        EL_step_size = parseInt(document.getElementById('step').value);
+        if( EL_type === "bezier"){
+            EL_step_size = EL_step_size * 50;
+            console.log("Step size: " + EL_step_size);
+
+        }
         EL_new_point = [];
         click_interaction(EL_type, EL_new_point, EL_step_size);
         console.log(EL_step_size);
+    }
+    function setLines(event){
+        if(EL_show_lines === 'true'){
+            EL_show_lines = 'false';
+        }
+        else{
+            EL_show_lines = 'true';
+        }
+        click_interaction(EL_type, EL_new_point, EL_step_size);
     }
 
     document.getElementById("canvas").addEventListener('click', setMousePos, true);
     document.getElementById('chaikin').addEventListener('click', setType, true);
     document.getElementById('bezier').addEventListener('click', setType, true);
     document.getElementById('step').addEventListener('click', setStepSize, true);
-
+    document.getElementById('showLines').addEventListener('click', setLines, true);
 
 }
 
@@ -568,8 +591,10 @@ function click_interaction(type, new_point, step_size)
         regl.clear({color:[1,1,1,1], depth: 1});
         drawCurve(type, points, step_size, false)
 
-        for (let i = 0; i < points.length; i+=2)
-            drawLine(points[i], points[i+1], points[i+2], points[i+3]);
+        if(EL_show_lines === 'true') {
+            for (let i = 0; i < points.length; i+=2)
+                drawLine(points[i], points[i+1], points[i+2], points[i+3]);
+        }
 
         for (let i = 0; i < points.length; i+=2)
             drawCircle(points[i], points[i+1], circle_tolerance);
